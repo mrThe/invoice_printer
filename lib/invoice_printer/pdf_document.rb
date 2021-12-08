@@ -801,7 +801,7 @@ module InvoicePrinter
       ] unless @document.subtotal.empty?
 
       items << [
-        { content: "#{@labels[:tax]}:#{build_sublabel_for_total_table(:tax)}", align: :left },
+        { content: "#{@labels[:tax_total]}:#{build_sublabel_for_total_table(:tax)}", align: :left },
         { content:  @document.tax, align: :right }
       ] unless @document.tax.empty?
 
