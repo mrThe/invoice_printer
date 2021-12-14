@@ -690,6 +690,8 @@ module InvoicePrinter
       unless items.empty?
         @pdf.font_size(10) do
           @pdf.table(data, options) do
+            row(0).column(1).width = 50 # Ugly hack, just to avoid word wrapping
+
             row(0).background_color = 'e3e3e3'
             row(0).border_color = 'aaaaaa'
             row(0).borders = [:bottom]
