@@ -231,12 +231,21 @@ module InvoicePrinter
     #    ------------------------------------------
     #
     def build_provider_box
-      @pdf.text_box(
-        @document.provider_name,
-        size: 15,
-        at: [10, y(640) - @push_down],
-        width: x(220)
+      provider_name_box = Prawn::Text::Formatted::Box.new(
+        [{
+          text: @document.provider_name,
+          size: 15
+        }],
+        {
+          document: @pdf,
+          overflow: :expand,
+          width: x(240),
+          at: [10, y(640) - @push_down]
+        }
       )
+
+      provider_name_box.render
+
       @pdf.text_box(
         @labels[:provider],
         size: 11,
@@ -252,19 +261,31 @@ module InvoicePrinter
           align: :right
         )
       end
+
       # Render provider_lines if present
       if !@document.provider_lines.empty?
         lines = @document.provider_lines.split("\n")
-        line_y = 618
-        lines.each_with_index do |line, index|
-          next if index > 3
+        line_y = 636 - provider_name_box.height # 618
 
-          @pdf.text_box(
-            "#{line}",
-            size: 10,
-            at: [10, y(line_y - index*15) - @push_down],
-            width: x(240)
+        prev_provider_line_height = 0
+
+        lines.each_with_index do |line, index|
+          provider_line_box = Prawn::Text::Formatted::Box.new(
+            [{
+              text: "#{line}",
+              size: 10
+            }],
+            {
+              document: @pdf,
+              width: x(240),
+              overflow: :expand,
+              at: [10, y(line_y - prev_provider_line_height) - @push_down]
+            }
           )
+
+          provider_line_box.render
+
+          prev_provider_line_height += provider_line_box.height
         end
       end
       unless @document.provider_tax_id.empty?
@@ -283,6 +304,8 @@ module InvoicePrinter
           width: x(240)
         )
       end
+
+      # TODO: draw relative to content
       @pdf.stroke_rounded_rectangle([0, y(670) - @push_down], x(266), y(150), 6)
     end
 
@@ -300,12 +323,29 @@ module InvoicePrinter
     #    ------------------------------------------
     #
     def build_purchaser_box
-      @pdf.text_box(
-        @document.purchaser_name,
-        size: 15,
-        at: [x(284), y(640) - @push_down],
-        width: x(240)
+      # @pdf.text_box(
+      #   @document.purchaser_name,
+      #   size: 15,
+      #   overflow: :expand,
+      #   at: [x(284), y(640) - @push_down],
+      #   width: x(240)
+      # )
+
+      purchaser_name_box = Prawn::Text::Formatted::Box.new(
+        [{
+          text: @document.purchaser_name,
+          size: 15
+        }],
+        {
+          document: @pdf,
+          overflow: :expand,
+          width: x(240),
+          at: [x(284), y(640) - @push_down]
+        }
       )
+
+      purchaser_name_box.render
+
       @pdf.text_box(
         @labels[:purchaser],
         size: 11,
@@ -325,7 +365,8 @@ module InvoicePrinter
       # Render purchaser_lines if present
       if !@document.purchaser_lines.empty?
         lines = @document.purchaser_lines.split("\n")
-        line_y = 618
+        line_y = 636 - purchaser_name_box.height
+
         lines.each_with_index do |line, index|
           next if index > 3
 
