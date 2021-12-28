@@ -790,6 +790,7 @@ module InvoicePrinter
           cell_style: {
             borders: []
           },
+          column_widths: 180, # fixes way too long item names
           position: :left
         }
 
