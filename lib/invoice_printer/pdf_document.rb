@@ -262,6 +262,8 @@ module InvoicePrinter
         )
       end
 
+      total_lines_height = provider_name_box.height
+
       # Render provider_lines if present
       if !@document.provider_lines.empty?
         lines = @document.provider_lines.split("\n")
@@ -286,6 +288,7 @@ module InvoicePrinter
           provider_line_box.render
 
           prev_provider_line_height += provider_line_box.height
+          total_lines_height += provider_line_box.height
         end
       end
       unless @document.provider_tax_id.empty?
@@ -305,8 +308,13 @@ module InvoicePrinter
         )
       end
 
-      # TODO: draw relative to content
-      @pdf.stroke_rounded_rectangle([0, y(670) - @push_down], x(266), y(150), 6)
+      # Draw relative to content, provider box is a biggest possible box, others are relative to it
+      # 38 is some magic contant, i have no idea
+      @provider_box_height = [total_lines_height + 38, 150].max
+
+      @provider_box_height_diff = @provider_box_height - 150
+
+      @pdf.stroke_rounded_rectangle([0, y(670) - @push_down], x(266), y(@provider_box_height), 6)
     end
 
     # Build the following purchaser box:
@@ -323,14 +331,6 @@ module InvoicePrinter
     #    ------------------------------------------
     #
     def build_purchaser_box
-      # @pdf.text_box(
-      #   @document.purchaser_name,
-      #   size: 15,
-      #   overflow: :expand,
-      #   at: [x(284), y(640) - @push_down],
-      #   width: x(240)
-      # )
-
       purchaser_name_box = Prawn::Text::Formatted::Box.new(
         [{
           text: @document.purchaser_name,
@@ -394,7 +394,7 @@ module InvoicePrinter
           width: x(240)
         )
       end
-      @pdf.stroke_rounded_rectangle([x(274), y(670) - @push_down], x(266), y(150), 6)
+      @pdf.stroke_rounded_rectangle([x(274), y(670) - @push_down], x(266), y(@provider_box_height), 6)
     end
 
     # Build the following payment box:
@@ -413,6 +413,7 @@ module InvoicePrinter
     # in cash.
     def build_payment_method_box
       @push_down -= 3
+      @push_down += @provider_box_height_diff
 
       unless letter?
         @push_items_table += 18
